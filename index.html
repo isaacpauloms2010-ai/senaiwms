@@ -1,0 +1,2749 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WMS Gestão de Armazém — SENAI</title>
+  <meta name="description" content="Sistema completo de Gestão de Armazém (WMS) com mapa interativo de 150 posições, recebimento (putaway), expedição (picking), consulta de estoque e dashboard analítico." />
+  <meta property="og:title" content="WMS Gestão de Armazém — SENAI" />
+  <meta property="og:description" content="Sistema completo de Gestão de Armazém (WMS) com mapa interativo de 150 posições, recebimento (putaway), expedição (picking), consulta de estoque e dashboard analítico." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <style>
+    :root {
+      --navy-950: #0a1222;
+      --navy-900: #0f172a;
+      --navy-800: #1e293b;
+      --navy-700: #334155;
+      --blue-700: #1d4ed8;
+      --blue-600: #2563eb;
+      --blue-50: #eff6ff;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-400: #94a3b8;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50: #f8fafc;
+      --white: #ffffff;
+
+      --green-700: #15803d;
+      --green-600: #16a34a;
+      --green-100: #dcfce7;
+      --green-50: #f0fdf4;
+
+      --red-700: #b91c1c;
+      --red-600: #dc2626;
+      --red-100: #fee2e2;
+      --red-50: #fef2f2;
+
+      --gray-blocked-bg: #cbd5e1;
+      --gray-blocked-border: #94a3b8;
+      --gray-blocked-text: #334155;
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 10px;
+      --sidebar-width: 264px;
+      --topbar-height: 64px;
+      --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--slate-100);
+      color: var(--navy-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mono, .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--blue-600);
+      outline-offset: 2px;
+    }
+
+    /* App Shell */
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--navy-900);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 40;
+      border-right: 1px solid var(--navy-800);
+      transition: transform var(--transition-fast);
+    }
+
+    .sidebar-header {
+      height: var(--topbar-height);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--navy-800);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background-color: var(--blue-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--white);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--slate-400);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-close-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--navy-700);
+      color: var(--slate-300);
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sidebar-nav {
+      padding: 16px 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--slate-400);
+      padding: 8px 12px 6px;
+      letter-spacing: 0.03em;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 11px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--slate-300);
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color var(--transition-fast), color var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .nav-item:hover {
+      background-color: var(--navy-800);
+      color: var(--white);
+    }
+
+    .nav-item.active {
+      background-color: var(--blue-700);
+      color: var(--white);
+      font-weight: 600;
+    }
+
+    .nav-item svg {
+      flex-shrink: 0;
+      opacity: 0.9;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--navy-800);
+      font-size: 12px;
+      color: var(--slate-400);
+    }
+
+    .sidebar-summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-summary-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .sidebar-summary-val {
+      color: var(--white);
+      font-weight: 600;
+    }
+
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.55);
+      z-index: 35;
+    }
+
+    /* Main Layout */
+    .main-wrapper {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .topbar {
+      height: var(--topbar-height);
+      background-color: var(--white);
+      border-bottom: 1px solid var(--slate-200);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .menu-toggle-btn {
+      display: none;
+      background: var(--white);
+      border: 1px solid var(--slate-300);
+      color: var(--navy-900);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .topbar-title-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .topbar-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy-900);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topbar-subtitle {
+      font-size: 12px;
+      color: var(--slate-500);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .main-content {
+      padding: 24px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    /* Views */
+    .view-section {
+      display: none;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-primary {
+      background-color: var(--navy-900);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--navy-800);
+    }
+
+    .btn-blue {
+      background-color: var(--blue-700);
+      color: var(--white);
+    }
+
+    .btn-blue:hover {
+      background-color: var(--blue-600);
+    }
+
+    .btn-success {
+      background-color: var(--green-600);
+      color: var(--white);
+    }
+
+    .btn-success:hover {
+      background-color: var(--green-700);
+    }
+
+    .btn-danger {
+      background-color: var(--red-600);
+      color: var(--white);
+    }
+
+    .btn-danger:hover {
+      background-color: var(--red-700);
+    }
+
+    .btn-outline {
+      background-color: var(--white);
+      border-color: var(--slate-300);
+      color: var(--navy-900);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--slate-50);
+      border-color: var(--slate-400);
+    }
+
+    .btn-sm {
+      min-height: 34px;
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    /* Cards & Surfaces */
+    .card {
+      background-color: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy-900);
+    }
+
+    .card-desc {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--slate-500);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-card {
+      background-color: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--slate-500);
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--navy-900);
+    }
+
+    .kpi-value.green { color: var(--green-700); }
+    .kpi-value.red { color: var(--red-700); }
+    .kpi-value.blue { color: var(--blue-700); }
+    .kpi-value.muted { color: var(--slate-600); }
+
+    .kpi-meta {
+      font-size: 12px;
+      color: var(--slate-500);
+    }
+
+    /* Dashboard Charts Layout */
+    .dashboard-charts-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 380px) 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .donut-layout {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--slate-100);
+    }
+
+    .legend-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .legend-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--navy-800);
+      font-weight: 500;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .swatch-green { background-color: var(--green-600); }
+    .swatch-red { background-color: var(--red-600); }
+    .swatch-gray { background-color: var(--slate-400); }
+
+    .chart-svg-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    /* Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background-color: var(--white);
+    }
+
+    thead {
+      background-color: var(--slate-50);
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    th {
+      text-align: left;
+      padding: 11px 14px;
+      font-weight: 600;
+      color: var(--navy-800);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--slate-100);
+      color: var(--navy-900);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background-color: var(--slate-50);
+    }
+
+    th.num, td.num {
+      text-align: right;
+    }
+
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-livre {
+      background-color: var(--green-100);
+      color: var(--green-700);
+    }
+
+    .status-ocupada {
+      background-color: var(--red-100);
+      color: var(--red-700);
+    }
+
+    .status-indisponivel {
+      background-color: var(--slate-200);
+      color: var(--slate-600);
+    }
+
+    .status-entrada {
+      background-color: var(--green-100);
+      color: var(--green-700);
+    }
+
+    .status-saida {
+      background-color: var(--red-100);
+      color: var(--red-700);
+    }
+
+    /* Warehouse Map */
+    .map-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .map-legend {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--navy-800);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .map-filters {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-select {
+      min-height: 36px;
+      padding: 6px 12px;
+      border: 1px solid var(--slate-300);
+      border-radius: var(--radius-sm);
+      background-color: var(--white);
+      color: var(--navy-900);
+      font-size: 13px;
+    }
+
+    .map-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .streets-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .street-card {
+      background-color: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .street-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    .street-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy-900);
+    }
+
+    .street-stats {
+      font-size: 12px;
+      color: var(--slate-500);
+    }
+
+    .modules-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .module-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .module-label {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--navy-700);
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--slate-100);
+    }
+
+    .slot-btn {
+      height: 36px;
+      width: 100%;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 100ms ease, box-shadow 100ms ease, opacity 120ms ease;
+      position: relative;
+    }
+
+    .slot-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .slot-btn.livre {
+      background-color: var(--green-50);
+      border-color: #86efac;
+      color: var(--green-700);
+    }
+
+    .slot-btn.livre:hover {
+      background-color: var(--green-100);
+      border-color: var(--green-600);
+    }
+
+    .slot-btn.ocupada {
+      background-color: var(--red-600);
+      border-color: var(--red-700);
+      color: var(--white);
+    }
+
+    .slot-btn.ocupada:hover {
+      background-color: var(--red-700);
+    }
+
+    .slot-btn.indisponivel {
+      background-color: var(--gray-blocked-bg);
+      border-color: var(--gray-blocked-border);
+      color: var(--gray-blocked-text);
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 5px,
+        rgba(100, 116, 139, 0.16) 5px,
+        rgba(100, 116, 139, 0.16) 10px
+      );
+    }
+
+    .slot-btn.selected {
+      outline: 2px solid var(--navy-900);
+      outline-offset: 2px;
+      z-index: 2;
+    }
+
+    .slot-btn.dimmed {
+      opacity: 0.22;
+    }
+
+    /* Map Inspector Panel */
+    .inspector-card {
+      position: sticky;
+      top: calc(var(--topbar-height) + 20px);
+    }
+
+    .inspector-empty {
+      padding: 28px 12px;
+      text-align: center;
+      color: var(--slate-500);
+      font-size: 13px;
+    }
+
+    .inspector-address {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy-900);
+      padding: 10px 12px;
+      background-color: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+    }
+
+    .detail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--slate-100);
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .detail-key {
+      color: var(--slate-500);
+    }
+
+    .detail-val {
+      font-weight: 600;
+      color: var(--navy-900);
+      text-align: right;
+      word-break: break-word;
+    }
+
+    /* Forms (Putaway & Picking) */
+    .two-col-form-layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 460px) 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy-800);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 12px;
+      border: 1px solid var(--slate-300);
+      border-radius: var(--radius-sm);
+      background-color: var(--white);
+      color: var(--navy-900);
+      font-size: 14px;
+      transition: border-color var(--transition-fast);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+
+    .form-hint {
+      margin-top: 5px;
+      font-size: 12px;
+      color: var(--slate-500);
+    }
+
+    .alert-box {
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .alert-box.show {
+      display: flex;
+    }
+
+    .alert-error {
+      background-color: var(--red-50);
+      border: 1px solid #fecaca;
+      color: var(--red-700);
+    }
+
+    .alert-success {
+      background-color: var(--green-50);
+      border: 1px solid #bbf7d0;
+      color: var(--green-700);
+    }
+
+    /* Search Bar */
+    .search-bar-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--slate-400);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 14px 10px 42px;
+      border: 1px solid var(--slate-300);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      background-color: var(--white);
+      color: var(--navy-900);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+
+    .empty-state {
+      padding: 36px 20px;
+      text-align: center;
+      color: var(--slate-500);
+      font-size: 14px;
+      border: 1px dashed var(--slate-300);
+      border-radius: var(--radius-sm);
+      background-color: var(--slate-50);
+    }
+
+    .empty-state strong {
+      display: block;
+      color: var(--navy-800);
+      margin-bottom: 4px;
+    }
+
+    /* Picking Selected Box */
+    .picking-selected-box {
+      padding: 14px;
+      border: 1px solid var(--slate-200);
+      background-color: var(--slate-50);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 360px;
+    }
+
+    .toast {
+      background-color: var(--navy-900);
+      color: var(--white);
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.22);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--navy-700);
+    }
+
+    .toast.toast-success {
+      background-color: var(--green-700);
+      border-color: var(--green-600);
+    }
+
+    .toast.toast-error {
+      background-color: var(--red-700);
+      border-color: var(--red-600);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.55);
+      z-index: 70;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background-color: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--slate-200);
+      max-width: 440px;
+      width: 100%;
+      padding: 22px;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.2);
+    }
+
+    .modal-title {
+      margin: 0 0 8px;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--navy-900);
+    }
+
+    .modal-text {
+      margin: 0 0 20px;
+      font-size: 14px;
+      color: var(--slate-600);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1240px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .map-layout {
+        grid-template-columns: 1fr;
+      }
+      .inspector-card {
+        position: static;
+      }
+      .two-col-form-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-charts-grid {
+        grid-template-columns: 1fr;
+      }
+      .streets-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .sidebar-backdrop.open {
+        display: block;
+      }
+      .sidebar-close-btn {
+        display: inline-flex;
+      }
+      .main-wrapper {
+        margin-left: 0;
+      }
+      .menu-toggle-btn {
+        display: inline-flex;
+      }
+      .main-content {
+        padding: 16px;
+      }
+      .topbar {
+        padding: 0 16px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .topbar-subtitle {
+        display: none;
+      }
+      .btn-label-desktop {
+        display: none;
+      }
+      .modules-row {
+        gap: 5px;
+      }
+      .slot-btn {
+        height: 34px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Backdrop mobile -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar" aria-label="Menu principal">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+              <path d="m3.3 7 8.7 5 8.7-5"/>
+              <path d="M12 22V12"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">LogisControl WMS</span>
+            <span class="brand-subtitle">Centro de Distribuição · SENAI</span>
+          </div>
+        </div>
+        <button id="sidebarCloseBtn" class="sidebar-close-btn" type="button" aria-label="Fechar menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">OPERAÇÕES LOGÍSTICAS</div>
+
+        <button class="nav-item active" type="button" data-view="dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-item" type="button" data-view="mapa">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-4h6v4"/><path d="M9 10h1"/><path d="M14 10h1"/><path d="M9 14h1"/><path d="M14 14h1"/>
+          </svg>
+          <span>Mapa do Armazém</span>
+        </button>
+
+        <button class="nav-item" type="button" data-view="entrada">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/>
+          </svg>
+          <span>Entrada de Mercadorias</span>
+        </button>
+
+        <button class="nav-item" type="button" data-view="saida">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/>
+          </svg>
+          <span>Saída de Mercadorias</span>
+        </button>
+
+        <button class="nav-item" type="button" data-view="consulta">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <span>Consulta de Produtos</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-summary-row">
+          <span>Estrutura física</span>
+          <span class="sidebar-summary-val tabular">6 Ruas · 30 Módulos</span>
+        </div>
+        <div class="sidebar-summary-row">
+          <span>Capacidade total</span>
+          <span class="sidebar-summary-val tabular">150 posições</span>
+        </div>
+        <div class="sidebar-summary-row">
+          <span>Taxa de ocupação</span>
+          <span id="sidebarOccupancyRate" class="sidebar-summary-val tabular">0,0%</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Area -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="menuToggleBtn" class="menu-toggle-btn" type="button" aria-label="Abrir menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>
+            </svg>
+          </button>
+          <div class="topbar-title-group">
+            <h1 id="topbarTitle" class="topbar-title">Dashboard</h1>
+            <span id="topbarSubtitle" class="topbar-subtitle">Visão geral da capacidade, ocupação e movimentação do armazém</span>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button id="restoreDemoBtn" class="btn btn-outline" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+            </svg>
+            <span class="btn-label-desktop">Restaurar Dados de Demonstração</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <!-- ==================== VIEW 1: DASHBOARD ==================== -->
+        <section id="view-dashboard" class="view-section active" aria-labelledby="topbarTitle">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Capacidade Total</span>
+              <span id="kpiTotal" class="kpi-value tabular">150</span>
+              <span class="kpi-meta">6 ruas × 5 módulos × 5 níveis</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Posições Ocupadas</span>
+              <span id="kpiOccupied" class="kpi-value red tabular">0</span>
+              <span id="kpiOccupiedUnits" class="kpi-meta tabular">0 unidades armazenadas</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Posições Livres</span>
+              <span id="kpiFree" class="kpi-value green tabular">0</span>
+              <span class="kpi-meta">Disponíveis para endereçamento</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Posições Indisponíveis</span>
+              <span id="kpiUnavailable" class="kpi-value muted tabular">0</span>
+              <span class="kpi-meta">Bloqueios de manutenção</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Taxa de Ocupação</span>
+              <span id="kpiRate" class="kpi-value blue tabular">0,0%</span>
+              <span class="kpi-meta">Ocupadas sobre 150 posições</span>
+            </div>
+          </div>
+
+          <div class="dashboard-charts-grid">
+            <!-- Donut SVG Chart -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Distribuição da Capacidade</h2>
+                  <p class="card-desc">Proporção atual das 150 posições do armazém</p>
+                </div>
+              </div>
+              <div class="donut-layout">
+                <div id="donutChartContainer"></div>
+                <div class="donut-legend">
+                  <div class="legend-row">
+                    <span class="legend-left"><span class="swatch swatch-red"></span>Ocupadas</span>
+                    <span id="legendOccupied" class="tabular mono">0 (0,0%)</span>
+                  </div>
+                  <div class="legend-row">
+                    <span class="legend-left"><span class="swatch swatch-green"></span>Livres</span>
+                    <span id="legendFree" class="tabular mono">0 (0,0%)</span>
+                  </div>
+                  <div class="legend-row">
+                    <span class="legend-left"><span class="swatch swatch-gray"></span>Indisponíveis</span>
+                    <span id="legendUnavailable" class="tabular mono">0 (0,0%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bar SVG Chart by Street -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Ocupação por Rua</h2>
+                  <p class="card-desc">Distribuição das 25 posições em cada uma das 6 ruas (A a F)</p>
+                </div>
+              </div>
+              <div id="streetBarChartContainer" class="chart-svg-wrap"></div>
+            </div>
+          </div>
+
+          <!-- Recent Movements -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Histórico de Movimentações Recentes</h2>
+                <p class="card-desc">Últimas operações de entrada (putaway) e saída (picking) registradas</p>
+              </div>
+            </div>
+            <div id="recentMovementsContainer"></div>
+          </div>
+        </section>
+
+        <!-- ==================== VIEW 2: MAPA DO ARMAZÉM ==================== -->
+        <section id="view-mapa" class="view-section">
+          <div class="card" style="margin-bottom: 16px;">
+            <div class="map-toolbar" style="margin-bottom: 0;">
+              <div class="map-legend">
+                <div class="legend-item">
+                  <span class="swatch swatch-green"></span>
+                  <span>Livre (disponível)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="swatch swatch-red"></span>
+                  <span>Ocupada (com produto)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="swatch swatch-gray"></span>
+                  <span>Indisponível (manutenção)</span>
+                </div>
+              </div>
+              <div class="map-filters">
+                <select id="mapStreetFilter" class="filter-select" aria-label="Filtrar por rua">
+                  <option value="TODAS">Todas as ruas (A–F)</option>
+                  <option value="RUA-A">Rua A</option>
+                  <option value="RUA-B">Rua B</option>
+                  <option value="RUA-C">Rua C</option>
+                  <option value="RUA-D">Rua D</option>
+                  <option value="RUA-E">Rua E</option>
+                  <option value="RUA-F">Rua F</option>
+                </select>
+                <select id="mapStatusFilter" class="filter-select" aria-label="Filtrar por status">
+                  <option value="TODOS">Todos os status (150)</option>
+                  <option value="livre">Somente livres</option>
+                  <option value="ocupada">Somente ocupadas</option>
+                  <option value="indisponivel">Somente indisponíveis</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="map-layout">
+            <div id="warehouseMapGrid" class="streets-grid" aria-label="Mapa visual de 150 posições do armazém"></div>
+
+            <aside class="card inspector-card" aria-live="polite">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Detalhes da Posição</h2>
+                  <p class="card-desc">Clique em qualquer célula do mapa para inspecionar</p>
+                </div>
+              </div>
+              <div id="mapInspectorBody">
+                <div class="inspector-empty">
+                  Nenhuma posição selecionada.<br />
+                  Clique em uma posição verde, vermelha ou cinza no mapa ao lado para visualizar o endereço e o estoque.
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ==================== VIEW 3: ENTRADA DE MERCADORIAS ==================== -->
+        <section id="view-entrada" class="view-section">
+          <div class="two-col-form-layout">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Recebimento e Endereçamento (Putaway)</h2>
+                  <p class="card-desc">Registre a entrada de um produto em uma posição livre do armazém</p>
+                </div>
+              </div>
+
+              <div id="putawayAlert" class="alert-box" role="alert"></div>
+
+              <form id="putawayForm" novalidate>
+                <div class="form-group">
+                  <label class="form-label" for="putawaySku">Código SKU *</label>
+                  <input id="putawaySku" class="form-control mono" type="text" placeholder="Ex: MOT-WEG-15CV" maxlength="40" required />
+                  <div class="form-hint">Identificador único do material ou produto.</div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="putawayName">Nome do Produto *</label>
+                  <input id="putawayName" class="form-control" type="text" placeholder="Ex: Motor Elétrico Trifásico 15CV" maxlength="100" required />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="putawayQty">Quantidade Recebida *</label>
+                  <input id="putawayQty" class="form-control tabular" type="number" min="1" step="1" placeholder="Ex: 25" required />
+                  <div class="form-hint">Informe um número inteiro positivo (maior que zero).</div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="putawayAddress">Endereço de Armazenamento (Posições Livres) *</label>
+                  <select id="putawayAddress" class="form-control mono" required></select>
+                  <div id="putawayFreeHint" class="form-hint"></div>
+                </div>
+
+                <button id="putawaySubmitBtn" class="btn btn-success" type="submit" style="width: 100%;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"/><path d="M12 5v14"/>
+                  </svg>
+                  Confirmar Entrada no Estoque
+                </button>
+              </form>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Resumo de Disponibilidade para Putaway</h2>
+                  <p class="card-desc">Posições livres disponíveis por rua para alocação imediata</p>
+                </div>
+              </div>
+              <div id="putawayStreetAvailability"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== VIEW 4: SAÍDA DE MERCADORIAS ==================== -->
+        <section id="view-saida" class="view-section">
+          <div class="two-col-form-layout">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Expedição e Retirada (Picking)</h2>
+                  <p class="card-desc">Selecione um produto na lista ao lado e informe a quantidade a retirar</p>
+                </div>
+              </div>
+
+              <div id="pickingAlert" class="alert-box" role="alert"></div>
+
+              <div id="pickingSelectionContainer">
+                <div class="empty-state">
+                  <strong>Nenhum item selecionado para retirada</strong>
+                  Pesquise pelo SKU ou nome do produto na lista ao lado e clique em "Selecionar".
+                </div>
+              </div>
+
+              <form id="pickingForm" style="display: none;" novalidate>
+                <input id="pickingAddressHidden" type="hidden" />
+                <div class="form-group">
+                  <label class="form-label" for="pickingQty">Quantidade a Retirar *</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input id="pickingQty" class="form-control tabular" type="number" min="1" step="1" placeholder="Ex: 10" required />
+                    <button id="pickingMaxBtn" class="btn btn-outline" type="button">Retirar Tudo</button>
+                  </div>
+                  <div id="pickingQtyHint" class="form-hint"></div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                  <button class="btn btn-danger" type="submit" style="flex: 1;">
+                    Confirmar Saída
+                  </button>
+                  <button id="pickingCancelBtn" class="btn btn-outline" type="button">
+                    Limpar Seleção
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Localizar Produto para Retirada</h2>
+                  <p class="card-desc">Pesquise por código SKU ou nome do produto para visualizar a localização</p>
+                </div>
+              </div>
+
+              <div class="search-bar-wrap">
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+                <input id="pickingSearchInput" class="search-input" type="search" placeholder="Digite o SKU ou nome do produto para retirar..." />
+              </div>
+
+              <div id="pickingResultsContainer"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== VIEW 5: CONSULTA DE PRODUTOS ==================== -->
+        <section id="view-consulta" class="view-section">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Consulta Geral de Produtos em Estoque</h2>
+                <p class="card-desc">Busca instantânea por nome ou SKU com localização exata (rua, módulo e nível)</p>
+              </div>
+              <div id="consultaCountInfo" class="tabular" style="font-size: 13px; font-weight: 600; color: var(--slate-600);"></div>
+            </div>
+
+            <div class="search-bar-wrap">
+              <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+              <input id="consultaSearchInput" class="search-input" type="search" placeholder="Pesquisar instantaneamente por nome do produto ou código SKU..." />
+            </div>
+
+            <div id="consultaTableContainer"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal for Restoring Demo Data -->
+  <div id="restoreModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="restoreModalTitle">
+    <div class="modal-dialog">
+      <h2 id="restoreModalTitle" class="modal-title">Restaurar Dados de Demonstração?</h2>
+      <p class="modal-text">
+        Esta ação substituirá todas as movimentações e alocações atuais pelo conjunto padrão de produtos de demonstração e pelos bloqueios de manutenção iniciais.
+      </p>
+      <div class="modal-actions">
+        <button id="cancelRestoreBtn" class="btn btn-outline" type="button">Cancelar</button>
+        <button id="confirmRestoreBtn" class="btn btn-primary" type="button">Confirmar Restauração</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* =========================================================
+       * 1. CONFIGURAÇÃO EXATA DO ARMAZÉM (150 POSIÇÕES)
+       * ========================================================= */
+      const STORAGE_KEY = "senai_wms_armazem_v1";
+      const STREETS = ["A", "B", "C", "D", "E", "F"]; // 6 ruas
+      const MODULES = ["MOD-01", "MOD-02", "MOD-03", "MOD-04", "MOD-05"]; // 5 módulos por rua
+      const LEVELS = ["NIVEL-1", "NIVEL-2", "NIVEL-3", "NIVEL-4", "NIVEL-5"]; // 5 níveis por módulo
+      const TOTAL_CAPACITY = STREETS.length * MODULES.length * LEVELS.length; // 150
+
+      // Posições fixas indisponíveis (bloqueios de manutenção demonstráveis)
+      const MAINTENANCE_BLOCKS = {
+        "RUA-A / MOD-03 / NIVEL-5": "Manutenção preventiva na travessa superior",
+        "RUA-B / MOD-02 / NIVEL-1": "Reparo estrutural no piso do corredor",
+        "RUA-B / MOD-02 / NIVEL-2": "Bloqueio vertical por manutenção do nível 1",
+        "RUA-C / MOD-05 / NIVEL-4": "Calibração de sensor óptico de endereçamento",
+        "RUA-D / MOD-01 / NIVEL-5": "Inspeção da rede de sprinklers",
+        "RUA-E / MOD-04 / NIVEL-3": "Longarina aguardando substituição",
+        "RUA-F / MOD-02 / NIVEL-1": "Passagem técnica e rota de segurança",
+        "RUA-F / MOD-05 / NIVEL-5": "Manutenção na luminária do corredor"
+      };
+
+      // Conjunto inicial de produtos fictícios de demonstração
+      const DEMO_ALLOCATIONS = [
+        { address: "RUA-A / MOD-01 / NIVEL-1", sku: "MOT-WEG-15CV", nome: "Motor Elétrico Trifásico 15CV", quantidade: 12 },
+        { address: "RUA-A / MOD-01 / NIVEL-2", sku: "ROL-SKF-6205", nome: "Rolamento Rígido de Esferas 6205-2Z", quantidade: 180 },
+        { address: "RUA-A / MOD-02 / NIVEL-1", sku: "PAL-PBR-1200", nome: "Palete de Madeira PBR 1000x1200mm", quantidade: 45 },
+        { address: "RUA-A / MOD-02 / NIVEL-3", sku: "CX-PAP-40X30", nome: "Caixa Papelão Ondulado 40x30x25cm", quantidade: 320 },
+        { address: "RUA-A / MOD-04 / NIVEL-1", sku: "CAB-PP-4X25", nome: "Cabo Elétrico Flexível PP 4x2,5mm (Rolo 100m)", quantidade: 18 },
+        { address: "RUA-A / MOD-05 / NIVEL-2", sku: "INV-FRQ-10A", nome: "Inversor de Frequência Industrial 10A", quantidade: 9 },
+
+        { address: "RUA-B / MOD-01 / NIVEL-1", sku: "VAL-PNU-52", nome: "Válvula Solenoide Pneumática 5/2 Vias", quantidade: 54 },
+        { address: "RUA-B / MOD-01 / NIVEL-3", sku: "CIL-PNU-63", nome: "Cilindro Pneumático Dupla Ação Ø63mm", quantidade: 22 },
+        { address: "RUA-B / MOD-03 / NIVEL-2", sku: "PAR-SEX-M10", nome: "Parafuso Sextavado Aço Inox M10x40 (Cx 100un)", quantidade: 85 },
+        { address: "RUA-B / MOD-04 / NIVEL-1", sku: "RES-PEAD-25", nome: "Resina Termoplástica PEAD Saco 25kg", quantidade: 60 },
+        { address: "RUA-B / MOD-05 / NIVEL-4", sku: "FIL-STR-20M", nome: "Filme Stretch Manual 500mm 20 Micras", quantidade: 72 },
+
+        { address: "RUA-C / MOD-01 / NIVEL-1", sku: "SEN-IND-M12", nome: "Sensor Indutivo PNP M12 Alcance 4mm", quantidade: 95 },
+        { address: "RUA-C / MOD-02 / NIVEL-2", sku: "CLP-CPU-24V", nome: "Controlador Lógico Programável 24VCC", quantidade: 14 },
+        { address: "RUA-C / MOD-03 / NIVEL-1", sku: "BOM-CEN-2CV", nome: "Bomba Centrífuga Industrial 2CV", quantidade: 8 },
+        { address: "RUA-C / MOD-04 / NIVEL-3", sku: "COR-TRA-B45", nome: "Correia Trapezoidal Industrial Perfil B-45", quantidade: 110 },
+
+        { address: "RUA-D / MOD-02 / NIVEL-1", sku: "EPI-CAP-ABA", nome: "Capacete de Segurança Classe B Aba Frontal", quantidade: 140 },
+        { address: "RUA-D / MOD-02 / NIVEL-2", sku: "EPI-LUV-NIT", nome: "Luva Nitrílica Industrial Tamanho G (Par)", quantidade: 260 },
+        { address: "RUA-D / MOD-03 / NIVEL-4", sku: "FIT-ADH-48", nome: "Fita Adesiva Empacotamento 48mmx100m", quantidade: 400 },
+        { address: "RUA-D / MOD-04 / NIVEL-1", sku: "ETQ-TER-100", nome: "Etiqueta Térmica Logística 100x150mm (Rolo)", quantidade: 64 },
+        { address: "RUA-D / MOD-05 / NIVEL-2", sku: "COL-RFID-UHF", nome: "Coletor de Dados Portátil Código de Barras", quantidade: 11 },
+
+        { address: "RUA-E / MOD-01 / NIVEL-1", sku: "OLE-HID-68", nome: "Óleo Hidráulico ISO VG 68 Tambor 200L", quantidade: 6 },
+        { address: "RUA-E / MOD-02 / NIVEL-3", sku: "GRA-LIT-18", nome: "Graxa Lubrificante Complexo de Lítio 18kg", quantidade: 19 },
+        { address: "RUA-E / MOD-03 / NIVEL-1", sku: "TUB-ACO-2P", nome: "Tubo de Aço Carbono Galvanizado 2 Pol (6m)", quantidade: 34 },
+        { address: "RUA-E / MOD-05 / NIVEL-2", sku: "MAN-HID-12", nome: "Mangueira Hidráulica Alta Pressão 1/2 Pol", quantidade: 48 },
+
+        { address: "RUA-F / MOD-01 / NIVEL-1", sku: "EMB-KLT-6428", nome: "Caixa Plástica Padrão KLT 600x400x280mm", quantidade: 75 },
+        { address: "RUA-F / MOD-03 / NIVEL-2", sku: "ROL-SKF-6205", nome: "Rolamento Rígido de Esferas 6205-2Z", quantidade: 120 },
+        { address: "RUA-F / MOD-04 / NIVEL-1", sku: "CAR-PAL-2500", nome: "Paleteira Hidráulica Manual 2500kg", quantidade: 4 }
+      ];
+
+      /* =========================================================
+       * 2. ESTADO & PERSISTÊNCIA EM LOCALSTORAGE
+       * ========================================================= */
+      let state = {
+        positions: [],
+        movements: []
+      };
+
+      let currentView = "dashboard";
+      let selectedMapAddress = null;
+
+      function formatAddress(street, mod, level) {
+        return "RUA-" + street + " / " + mod + " / " + level;
+      }
+
+      function nowFormatted() {
+        const d = new Date();
+        return d.toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function createInitialState() {
+        const positions = [];
+        const demoMap = new Map();
+        DEMO_ALLOCATIONS.forEach(function (item) {
+          demoMap.set(item.address, item);
+        });
+
+        const baseTime = nowFormatted();
+
+        STREETS.forEach(function (street) {
+          MODULES.forEach(function (mod) {
+            LEVELS.forEach(function (level) {
+              const address = formatAddress(street, mod, level);
+              if (MAINTENANCE_BLOCKS[address]) {
+                positions.push({
+                  address: address,
+                  rua: "Rua " + street,
+                  ruaCodigo: "RUA-" + street,
+                  modulo: mod,
+                  nivel: level,
+                  status: "indisponivel",
+                  motivoBloqueio: MAINTENANCE_BLOCKS[address],
+                  produto: null
+                });
+              } else if (demoMap.has(address)) {
+                const demoItem = demoMap.get(address);
+                positions.push({
+                  address: address,
+                  rua: "Rua " + street,
+                  ruaCodigo: "RUA-" + street,
+                  modulo: mod,
+                  nivel: level,
+                  status: "ocupada",
+                  motivoBloqueio: null,
+                  produto: {
+                    sku: demoItem.sku,
+                    nome: demoItem.nome,
+                    quantidade: demoItem.quantidade,
+                    atualizadoEm: baseTime
+                  }
+                });
+              } else {
+                positions.push({
+                  address: address,
+                  rua: "Rua " + street,
+                  ruaCodigo: "RUA-" + street,
+                  modulo: mod,
+                  nivel: level,
+                  status: "livre",
+                  motivoBloqueio: null,
+                  produto: null
+                });
+              }
+            });
+          });
+        });
+
+        const initialMovements = [
+          {
+            dataHora: baseTime,
+            tipo: "ENTRADA",
+            sku: "CAR-PAL-2500",
+            nome: "Paleteira Hidráulica Manual 2500kg",
+            quantidade: 4,
+            address: "RUA-F / MOD-04 / NIVEL-1"
+          },
+          {
+            dataHora: baseTime,
+            tipo: "ENTRADA",
+            sku: "MOT-WEG-15CV",
+            nome: "Motor Elétrico Trifásico 15CV",
+            quantidade: 12,
+            address: "RUA-A / MOD-01 / NIVEL-1"
+          },
+          {
+            dataHora: baseTime,
+            tipo: "ENTRADA",
+            sku: "CLP-CPU-24V",
+            nome: "Controlador Lógico Programável 24VCC",
+            quantidade: 14,
+            address: "RUA-C / MOD-02 / NIVEL-2"
+          }
+        ];
+
+        return {
+          positions: positions,
+          movements: initialMovements
+        };
+      }
+
+      function validateLoadedState(parsed) {
+        if (!parsed || !Array.isArray(parsed.positions) || parsed.positions.length !== TOTAL_CAPACITY) {
+          return false;
+        }
+        const expectedAddresses = new Set();
+        STREETS.forEach(function (s) {
+          MODULES.forEach(function (m) {
+            LEVELS.forEach(function (l) {
+              expectedAddresses.add(formatAddress(s, m, l));
+            });
+          });
+        });
+        for (let i = 0; i < parsed.positions.length; i++) {
+          const pos = parsed.positions[i];
+          if (!pos || !expectedAddresses.has(pos.address)) {
+            return false;
+          }
+          if (pos.status !== "livre" && pos.status !== "ocupada" && pos.status !== "indisponivel") {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (validateLoadedState(parsed)) {
+              state = {
+                positions: parsed.positions,
+                movements: Array.isArray(parsed.movements) ? parsed.movements : []
+              };
+              return;
+            }
+          }
+        } catch (err) {
+          console.error("Erro ao ler localStorage:", err);
+        }
+        state = createInitialState();
+        saveState();
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (err) {
+          console.error("Erro ao salvar no localStorage:", err);
+        }
+      }
+
+      function getPositionByAddress(address) {
+        return state.positions.find(function (p) { return p.address === address; }) || null;
+      }
+
+      function getMetrics() {
+        let occupied = 0;
+        let free = 0;
+        let unavailable = 0;
+        let totalUnits = 0;
+
+        state.positions.forEach(function (pos) {
+          if (pos.status === "ocupada") {
+            occupied++;
+            if (pos.produto && typeof pos.produto.quantidade === "number") {
+              totalUnits += pos.produto.quantidade;
+            }
+          } else if (pos.status === "livre") {
+            free++;
+          } else {
+            unavailable++;
+          }
+        });
+
+        const occupancyRate = (occupied / TOTAL_CAPACITY) * 100;
+        return {
+          total: TOTAL_CAPACITY,
+          occupied: occupied,
+          free: free,
+          unavailable: unavailable,
+          totalUnits: totalUnits,
+          occupancyRate: occupancyRate
+        };
+      }
+
+      function formatPercent(value) {
+        return value.toFixed(1).replace(".", ",") + "%";
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = String(text);
+        return div.innerHTML;
+      }
+
+      /* =========================================================
+       * 3. NOTIFICAÇÕES TOAST & ALERTAS INLINE
+       * ========================================================= */
+      function showToast(message, type) {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        toast.className = "toast " + (type === "error" ? "toast-error" : "toast-success");
+        toast.innerHTML = "<span>" + escapeHtml(message) + "</span>";
+        container.appendChild(toast);
+
+        setTimeout(function () {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 3800);
+      }
+
+      function showInlineAlert(elementId, message, type) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        el.className = "alert-box show " + (type === "error" ? "alert-error" : "alert-success");
+        el.textContent = message;
+      }
+
+      function clearInlineAlert(elementId) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        el.className = "alert-box";
+        el.textContent = "";
+      }
+
+      /* =========================================================
+       * 4. NAVEGAÇÃO ENTRE TELAS E SIDEBAR RESPONSIVA
+       * ========================================================= */
+      const VIEW_META = {
+        dashboard: {
+          title: "Dashboard",
+          subtitle: "Visão geral da capacidade (150 posições), ocupação e movimentação do armazém"
+        },
+        mapa: {
+          title: "Mapa do Armazém",
+          subtitle: "Visualização interativa das 6 ruas, 30 módulos e 150 posições de armazenagem"
+        },
+        entrada: {
+          title: "Entrada de Mercadorias",
+          subtitle: "Recebimento e endereçamento (putaway) em posições livres disponíveis"
+        },
+        saida: {
+          title: "Saída de Mercadorias",
+          subtitle: "Separação e retirada de estoque (picking) com liberação automática de posições"
+        },
+        consulta: {
+          title: "Consulta de Produtos",
+          subtitle: "Pesquisa instantânea por nome ou SKU com localização exata no armazém"
+        }
+      };
+
+      function openMobileSidebar() {
+        document.getElementById("sidebar").classList.add("open");
+        document.getElementById("sidebarBackdrop").classList.add("open");
+      }
+
+      function closeMobileSidebar() {
+        document.getElementById("sidebar").classList.remove("open");
+        document.getElementById("sidebarBackdrop").classList.remove("open");
+      }
+
+      function navigateTo(viewName) {
+        if (!VIEW_META[viewName]) return;
+        currentView = viewName;
+
+        document.querySelectorAll(".nav-item").forEach(function (btn) {
+          btn.classList.toggle("active", btn.getAttribute("data-view") === viewName);
+        });
+
+        document.querySelectorAll(".view-section").forEach(function (sec) {
+          sec.classList.toggle("active", sec.id === "view-" + viewName);
+        });
+
+        document.getElementById("topbarTitle").textContent = VIEW_META[viewName].title;
+        document.getElementById("topbarSubtitle").textContent = VIEW_META[viewName].subtitle;
+
+        closeMobileSidebar();
+        renderAll();
+      }
+
+      /* =========================================================
+       * 5. RENDERIZAÇÃO DO DASHBOARD (KPIs + GRÁFICOS SVG + TABELA)
+       * ========================================================= */
+      function renderDonutChart(metrics) {
+        const container = document.getElementById("donutChartContainer");
+        const size = 188;
+        const cx = size / 2;
+        const cy = size / 2;
+        const radius = 70;
+        const strokeWidth = 22;
+        const circumference = 2 * Math.PI * radius;
+
+        const occLen = (metrics.occupied / metrics.total) * circumference;
+        const freeLen = (metrics.free / metrics.total) * circumference;
+        const unavLen = (metrics.unavailable / metrics.total) * circumference;
+
+        const occOffset = 0;
+        const freeOffset = -occLen;
+        const unavOffset = -(occLen + freeLen);
+
+        container.innerHTML =
+          '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" role="img" aria-label="Gráfico de distribuição de posições do armazém">' +
+            '<circle cx="' + cx + '" cy="' + cy + '" r="' + radius + '" fill="none" stroke="#e2e8f0" stroke-width="' + strokeWidth + '"></circle>' +
+            '<circle cx="' + cx + '" cy="' + cy + '" r="' + radius + '" fill="none" stroke="#dc2626" stroke-width="' + strokeWidth + '" stroke-dasharray="' + occLen.toFixed(2) + ' ' + circumference.toFixed(2) + '" stroke-dashoffset="' + occOffset.toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>' +
+            '<circle cx="' + cx + '" cy="' + cy + '" r="' + radius + '" fill="none" stroke="#16a34a" stroke-width="' + strokeWidth + '" stroke-dasharray="' + freeLen.toFixed(2) + ' ' + circumference.toFixed(2) + '" stroke-dashoffset="' + freeOffset.toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>' +
+            '<circle cx="' + cx + '" cy="' + cy + '" r="' + radius + '" fill="none" stroke="#94a3b8" stroke-width="' + strokeWidth + '" stroke-dasharray="' + unavLen.toFixed(2) + ' ' + circumference.toFixed(2) + '" stroke-dashoffset="' + unavOffset.toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>' +
+            '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-size="24" font-weight="700" fill="#0f172a">' + formatPercent(metrics.occupancyRate) + '</text>' +
+            '<text x="' + cx + '" y="' + (cy + 16) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#64748b">Ocupação</text>' +
+          '</svg>';
+
+        document.getElementById("legendOccupied").textContent = metrics.occupied + " (" + formatPercent((metrics.occupied / metrics.total) * 100) + ")";
+        document.getElementById("legendFree").textContent = metrics.free + " (" + formatPercent((metrics.free / metrics.total) * 100) + ")";
+        document.getElementById("legendUnavailable").textContent = metrics.unavailable + " (" + formatPercent((metrics.unavailable / metrics.total) * 100) + ")";
+      }
+
+      function renderStreetBarChart() {
+        const container = document.getElementById("streetBarChartContainer");
+        const width = 560;
+        const height = 220;
+        const padLeft = 40;
+        const padRight = 16;
+        const padTop = 18;
+        const padBottom = 38;
+        const chartW = width - padLeft - padRight;
+        const chartH = height - padTop - padBottom;
+        const maxPerStreet = 25;
+
+        const streetStats = STREETS.map(function (s) {
+          const code = "RUA-" + s;
+          let occ = 0;
+          let free = 0;
+          let unav = 0;
+          state.positions.forEach(function (p) {
+            if (p.ruaCodigo === code) {
+              if (p.status === "ocupada") occ++;
+              else if (p.status === "livre") free++;
+              else unav++;
+            }
+          });
+          return { label: "Rua " + s, occ: occ, free: free, unav: unav };
+        });
+
+        let gridSvg = "";
+        [0, 5, 10, 15, 20, 25].forEach(function (val) {
+          const y = padTop + chartH - (val / maxPerStreet) * chartH;
+          gridSvg += '<line x1="' + padLeft + '" y1="' + y + '" x2="' + (width - padRight) + '" y2="' + y + '" stroke="#e2e8f0" stroke-width="1" />';
+          gridSvg += '<text x="' + (padLeft - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" fill="#64748b">' + val + '</text>';
+        });
+
+        const slotW = chartW / streetStats.length;
+        const barW = Math.min(44, slotW * 0.54);
+
+        let barsSvg = "";
+        streetStats.forEach(function (st, idx) {
+          const x = padLeft + idx * slotW + (slotW - barW) / 2;
+          const occH = (st.occ / maxPerStreet) * chartH;
+          const freeH = (st.free / maxPerStreet) * chartH;
+          const unavH = (st.unav / maxPerStreet) * chartH;
+
+          const occY = padTop + chartH - occH;
+          const freeY = occY - freeH;
+          const unavY = freeY - unavH;
+
+          if (occH > 0) {
+            barsSvg += '<rect x="' + x + '" y="' + occY + '" width="' + barW + '" height="' + occH + '" fill="#dc2626"><title>' + st.label + ': ' + st.occ + ' ocupadas</title></rect>';
+          }
+          if (freeH > 0) {
+            barsSvg += '<rect x="' + x + '" y="' + freeY + '" width="' + barW + '" height="' + freeH + '" fill="#16a34a"><title>' + st.label + ': ' + st.free + ' livres</title></rect>';
+          }
+          if (unavH > 0) {
+            barsSvg += '<rect x="' + x + '" y="' + unavY + '" width="' + barW + '" height="' + unavH + '" fill="#94a3b8"><title>' + st.label + ': ' + st.unav + ' indisponíveis</title></rect>';
+          }
+
+          barsSvg += '<text x="' + (x + barW / 2) + '" y="' + (height - 14) + '" text-anchor="middle" font-size="12" font-weight="600" fill="#1e293b">' + st.label + '</text>';
+          barsSvg += '<text x="' + (x + barW / 2) + '" y="' + (padTop - 5) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">' + st.occ + '/25</text>';
+        });
+
+        container.innerHTML =
+          '<svg viewBox="0 0 ' + width + ' ' + height + '" style="width: 100%; max-width: 680px; height: auto; display: block;" role="img" aria-label="Gráfico de barras de ocupação por rua">' +
+            gridSvg +
+            barsSvg +
+          '</svg>';
+      }
+
+      function renderRecentMovements() {
+        const container = document.getElementById("recentMovementsContainer");
+        if (!state.movements.length) {
+          container.innerHTML =
+            '<div class="empty-state"><strong>Nenhuma movimentação registrada</strong>Registre uma entrada ou saída para acompanhar o histórico operacional.</div>';
+          return;
+        }
+
+        const rows = state.movements.slice(0, 10).map(function (m) {
+          const isIn = m.tipo === "ENTRADA";
+          return (
+            "<tr>" +
+              '<td class="tabular" style="white-space:nowrap;">' + escapeHtml(m.dataHora) + "</td>" +
+              '<td><span class="status-tag ' + (isIn ? "status-entrada" : "status-saida") + '">' + (isIn ? "Entrada" : "Saída") + "</span></td>" +
+              '<td class="mono">' + escapeHtml(m.sku) + "</td>" +
+              "<td>" + escapeHtml(m.nome) + "</td>" +
+              '<td class="num tabular"><strong>' + (isIn ? "+" : "-") + escapeHtml(m.quantidade) + "</strong></td>" +
+              '<td class="mono" style="white-space:nowrap;">' + escapeHtml(m.address) + "</td>" +
+            "</tr>"
+          );
+        }).join("");
+
+        container.innerHTML =
+          '<div class="table-wrap">' +
+            "<table>" +
+              "<thead><tr>" +
+                "<th>Data / Hora</th>" +
+                "<th>Operação</th>" +
+                "<th>SKU</th>" +
+                "<th>Produto</th>" +
+                '<th class="num">Quantidade</th>' +
+                "<th>Endereço</th>" +
+              "</tr></thead>" +
+              "<tbody>" + rows + "</tbody>" +
+            "</table>" +
+          "</div>";
+      }
+
+      function renderDashboard() {
+        const metrics = getMetrics();
+        document.getElementById("kpiTotal").textContent = String(metrics.total);
+        document.getElementById("kpiOccupied").textContent = String(metrics.occupied);
+        document.getElementById("kpiOccupiedUnits").textContent = metrics.totalUnits.toLocaleString("pt-BR") + " unidades armazenadas";
+        document.getElementById("kpiFree").textContent = String(metrics.free);
+        document.getElementById("kpiUnavailable").textContent = String(metrics.unavailable);
+        document.getElementById("kpiRate").textContent = formatPercent(metrics.occupancyRate);
+        document.getElementById("sidebarOccupancyRate").textContent = formatPercent(metrics.occupancyRate);
+
+        renderDonutChart(metrics);
+        renderStreetBarChart();
+        renderRecentMovements();
+      }
+
+      /* =========================================================
+       * 6. MAPA VISUAL INTERATIVO (150 POSIÇÕES)
+       * ========================================================= */
+      function renderWarehouseMap() {
+        const grid = document.getElementById("warehouseMapGrid");
+        const streetFilter = document.getElementById("mapStreetFilter").value;
+        const statusFilter = document.getElementById("mapStatusFilter").value;
+
+        const streetsToShow = streetFilter === "TODAS"
+          ? STREETS
+          : STREETS.filter(function (s) { return "RUA-" + s === streetFilter; });
+
+        // Exibir níveis de cima para baixo (NIVEL-5 no topo até NIVEL-1 na base)
+        const levelsTopDown = LEVELS.slice().reverse();
+
+        grid.innerHTML = "";
+
+        streetsToShow.forEach(function (street) {
+          const streetCode = "RUA-" + street;
+          const streetPositions = state.positions.filter(function (p) { return p.ruaCodigo === streetCode; });
+          const occCount = streetPositions.filter(function (p) { return p.status === "ocupada"; }).length;
+          const freeCount = streetPositions.filter(function (p) { return p.status === "livre"; }).length;
+          const unavCount = streetPositions.filter(function (p) { return p.status === "indisponivel"; }).length;
+
+          const card = document.createElement("div");
+          card.className = "street-card";
+
+          const header = document.createElement("div");
+          header.className = "street-header";
+          header.innerHTML =
+            '<h3 class="street-title">Rua ' + street + '</h3>' +
+            '<span class="street-stats tabular">' + occCount + ' ocup. · ' + freeCount + ' livres · ' + unavCount + ' manut.</span>';
+          card.appendChild(header);
+
+          const modulesRow = document.createElement("div");
+          modulesRow.className = "modules-row";
+
+          MODULES.forEach(function (mod) {
+            const modCol = document.createElement("div");
+            modCol.className = "module-col";
+
+            const modLabel = document.createElement("div");
+            modLabel.className = "module-label mono";
+            modLabel.textContent = mod;
+            modCol.appendChild(modLabel);
+
+            levelsTopDown.forEach(function (level) {
+              const address = formatAddress(street, mod, level);
+              const pos = getPositionByAddress(address);
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "slot-btn " + pos.status;
+              if (selectedMapAddress === address) {
+                btn.classList.add("selected");
+              }
+              if (statusFilter !== "TODOS" && pos.status !== statusFilter) {
+                btn.classList.add("dimmed");
+              }
+
+              const levelShort = level.replace("NIVEL-", "N");
+              btn.textContent = levelShort;
+              btn.setAttribute("data-address", address);
+              btn.setAttribute(
+                "title",
+                address +
+                (pos.status === "ocupada" && pos.produto
+                  ? " — " + pos.produto.sku + " (" + pos.produto.quantidade + " un.)"
+                  : pos.status === "indisponivel"
+                    ? " — Indisponível (Manutenção)"
+                    : " — Livre")
+              );
+              btn.setAttribute("aria-label", address + ", status " + pos.status);
+
+              btn.addEventListener("click", function () {
+                selectedMapAddress = address;
+                renderWarehouseMap();
+                renderMapInspector();
+              });
+
+              modCol.appendChild(btn);
+            });
+
+            modulesRow.appendChild(modCol);
+          });
+
+          card.appendChild(modulesRow);
+          grid.appendChild(card);
+        });
+
+        renderMapInspector();
+      }
+
+      function renderMapInspector() {
+        const body = document.getElementById("mapInspectorBody");
+        if (!selectedMapAddress) {
+          body.innerHTML =
+            '<div class="inspector-empty">' +
+              "Nenhuma posição selecionada.<br />" +
+              "Clique em uma posição verde, vermelha ou cinza no mapa ao lado para visualizar o endereço e o estoque." +
+            "</div>";
+          return;
+        }
+
+        const pos = getPositionByAddress(selectedMapAddress);
+        if (!pos) return;
+
+        let statusBadge = "";
+        if (pos.status === "livre") {
+          statusBadge = '<span class="status-tag status-livre">Livre</span>';
+        } else if (pos.status === "ocupada") {
+          statusBadge = '<span class="status-tag status-ocupada">Ocupada</span>';
+        } else {
+          statusBadge = '<span class="status-tag status-indisponivel">Indisponível</span>';
+        }
+
+        let contentHtml =
+          '<div class="inspector-address mono">' + escapeHtml(pos.address) + "</div>" +
+          '<div class="detail-list">' +
+            '<div class="detail-row"><span class="detail-key">Status</span><span class="detail-val">' + statusBadge + "</span></div>" +
+            '<div class="detail-row"><span class="detail-key">Rua / Módulo / Nível</span><span class="detail-val tabular">' + escapeHtml(pos.rua) + " · " + escapeHtml(pos.modulo) + " · " + escapeHtml(pos.nivel) + "</span></div>";
+
+        if (pos.status === "ocupada" && pos.produto) {
+          contentHtml +=
+            '<div class="detail-row"><span class="detail-key">Código SKU</span><span class="detail-val mono">' + escapeHtml(pos.produto.sku) + "</span></div>" +
+            '<div class="detail-row"><span class="detail-key">Produto</span><span class="detail-val">' + escapeHtml(pos.produto.nome) + "</span></div>" +
+            '<div class="detail-row"><span class="detail-key">Quantidade</span><span class="detail-val tabular">' + escapeHtml(pos.produto.quantidade) + " un.</span></div>" +
+            '<div class="detail-row"><span class="detail-key">Atualizado em</span><span class="detail-val tabular">' + escapeHtml(pos.produto.atualizadoEm || "-") + "</span></div>" +
+          "</div>" +
+          '<button id="inspectorPickBtn" class="btn btn-danger" type="button" style="width: 100%;">Registrar Saída desta Posição</button>';
+        } else if (pos.status === "livre") {
+          contentHtml +=
+            '<div class="detail-row"><span class="detail-key">Situação</span><span class="detail-val">Posição livre e disponível</span></div>' +
+          "</div>" +
+          '<button id="inspectorPutawayBtn" class="btn btn-success" type="button" style="width: 100%;">Alocar Produto Nesta Posição</button>';
+        } else {
+          contentHtml +=
+            '<div class="detail-row"><span class="detail-key">Situação</span><span class="detail-val">Posição indisponível (bloqueada)</span></div>' +
+            '<div class="detail-row"><span class="detail-key">Motivo</span><span class="detail-val">' + escapeHtml(pos.motivoBloqueio || "Manutenção programada") + "</span></div>" +
+          "</div>";
+        }
+
+        body.innerHTML = contentHtml;
+
+        const putawayQuickBtn = document.getElementById("inspectorPutawayBtn");
+        if (putawayQuickBtn) {
+          putawayQuickBtn.addEventListener("click", function () {
+            navigateTo("entrada");
+            const select = document.getElementById("putawayAddress");
+            if (select) {
+              select.value = pos.address;
+            }
+            document.getElementById("putawaySku").focus();
+          });
+        }
+
+        const pickQuickBtn = document.getElementById("inspectorPickBtn");
+        if (pickQuickBtn) {
+          pickQuickBtn.addEventListener("click", function () {
+            navigateTo("saida");
+            selectPickingPosition(pos.address);
+          });
+        }
+      }
+
+      /* =========================================================
+       * 7. ENTRADA DE MERCADORIAS (PUTAWAY)
+       * ========================================================= */
+      function renderPutawayView() {
+        const select = document.getElementById("putawayAddress");
+        const previousVal = select.value;
+        const freePositions = state.positions.filter(function (p) { return p.status === "livre"; });
+
+        select.innerHTML = "";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = freePositions.length
+          ? "Selecione uma posição livre (" + freePositions.length + " disponíveis)..."
+          : "Nenhuma posição livre disponível no armazém";
+        select.appendChild(placeholder);
+
+        freePositions.forEach(function (pos) {
+          const opt = document.createElement("option");
+          opt.value = pos.address;
+          opt.textContent = pos.address;
+          select.appendChild(opt);
+        });
+
+        if (previousVal && freePositions.some(function (p) { return p.address === previousVal; })) {
+          select.value = previousVal;
+        }
+
+        document.getElementById("putawayFreeHint").textContent =
+          freePositions.length + " de " + TOTAL_CAPACITY + " posições disponíveis para endereçamento.";
+        document.getElementById("putawaySubmitBtn").disabled = freePositions.length === 0;
+
+        // Tabela de disponibilidade por rua
+        const availContainer = document.getElementById("putawayStreetAvailability");
+        const rows = STREETS.map(function (s) {
+          const code = "RUA-" + s;
+          const streetList = state.positions.filter(function (p) { return p.ruaCodigo === code; });
+          const free = streetList.filter(function (p) { return p.status === "livre"; }).length;
+          const occ = streetList.filter(function (p) { return p.status === "ocupada"; }).length;
+          const unav = streetList.filter(function (p) { return p.status === "indisponivel"; }).length;
+
+          return (
+            "<tr>" +
+              "<td><strong>Rua " + s + "</strong></td>" +
+              '<td class="num tabular" style="color: var(--green-700); font-weight: 700;">' + free + "</td>" +
+              '<td class="num tabular">' + occ + "</td>" +
+              '<td class="num tabular">' + unav + "</td>" +
+              '<td class="num tabular">25</td>' +
+            "</tr>"
+          );
+        }).join("");
+
+        availContainer.innerHTML =
+          '<div class="table-wrap">' +
+            "<table>" +
+              "<thead><tr>" +
+                "<th>Rua</th>" +
+                '<th class="num">Livres</th>' +
+                '<th class="num">Ocupadas</th>' +
+                '<th class="num">Manutenção</th>' +
+                '<th class="num">Capacidade</th>' +
+              "</tr></thead>" +
+              "<tbody>" + rows + "</tbody>" +
+            "</table>" +
+          "</div>";
+      }
+
+      function handlePutawaySubmit(event) {
+        event.preventDefault();
+        clearInlineAlert("putawayAlert");
+
+        const skuInput = document.getElementById("putawaySku");
+        const nameInput = document.getElementById("putawayName");
+        const qtyInput = document.getElementById("putawayQty");
+        const addrSelect = document.getElementById("putawayAddress");
+
+        const sku = skuInput.value.trim().toUpperCase();
+        const nome = nameInput.value.trim();
+        const rawQty = qtyInput.value.trim();
+        const qtyNum = Number(rawQty);
+        const address = addrSelect.value.trim();
+
+        if (!sku) {
+          showInlineAlert("putawayAlert", "Erro de validação: informe o código SKU do produto.", "error");
+          skuInput.focus();
+          return;
+        }
+        if (!nome) {
+          showInlineAlert("putawayAlert", "Erro de validação: informe o nome do produto.", "error");
+          nameInput.focus();
+          return;
+        }
+        if (!rawQty || !Number.isInteger(qtyNum) || qtyNum <= 0) {
+          showInlineAlert("putawayAlert", "Erro de validação: a quantidade recebida deve ser um número inteiro positivo maior que zero.", "error");
+          qtyInput.focus();
+          return;
+        }
+        if (!address) {
+          showInlineAlert("putawayAlert", "Erro de validação: selecione um endereço livre de armazenamento.", "error");
+          addrSelect.focus();
+          return;
+        }
+
+        const pos = getPositionByAddress(address);
+        if (!pos) {
+          showInlineAlert("putawayAlert", "Endereço inválido: a posição informada não existe no armazém.", "error");
+          return;
+        }
+
+        // Proteção rígida contra cadastro em posições ocupadas ou indisponíveis
+        if (pos.status === "ocupada") {
+          showInlineAlert("putawayAlert", "Operação bloqueada: o endereço " + pos.address + " já está ocupado.", "error");
+          return;
+        }
+        if (pos.status === "indisponivel") {
+          showInlineAlert("putawayAlert", "Operação bloqueada: o endereço " + pos.address + " está indisponível por manutenção.", "error");
+          return;
+        }
+
+        const timestamp = nowFormatted();
+        pos.status = "ocupada";
+        pos.produto = {
+          sku: sku,
+          nome: nome,
+          quantidade: qtyNum,
+          atualizadoEm: timestamp
+        };
+
+        state.movements.unshift({
+          dataHora: timestamp,
+          tipo: "ENTRADA",
+          sku: sku,
+          nome: nome,
+          quantidade: qtyNum,
+          address: pos.address
+        });
+        if (state.movements.length > 50) {
+          state.movements.length = 50;
+        }
+
+        saveState();
+        selectedMapAddress = pos.address;
+
+        skuInput.value = "";
+        nameInput.value = "";
+        qtyInput.value = "";
+        addrSelect.value = "";
+
+        renderAll();
+        showInlineAlert("putawayAlert", "Entrada confirmada: " + qtyNum + " un. de " + sku + " alocadas em " + pos.address + ".", "success");
+        showToast("Produto endereçado em " + pos.address, "success");
+      }
+
+      /* =========================================================
+       * 8. SAÍDA DE MERCADORIAS (PICKING)
+       * ========================================================= */
+      let selectedPickingAddress = null;
+
+      function selectPickingPosition(address) {
+        clearInlineAlert("pickingAlert");
+        const pos = getPositionByAddress(address);
+        if (!pos || pos.status !== "ocupada" || !pos.produto) {
+          selectedPickingAddress = null;
+          renderPickingSelection();
+          return;
+        }
+
+        selectedPickingAddress = pos.address;
+        renderPickingSelection();
+        const qtyField = document.getElementById("pickingQty");
+        qtyField.value = "";
+        qtyField.max = String(pos.produto.quantidade);
+        qtyField.focus();
+      }
+
+      function renderPickingSelection() {
+        const container = document.getElementById("pickingSelectionContainer");
+        const form = document.getElementById("pickingForm");
+
+        if (!selectedPickingAddress) {
+          container.innerHTML =
+            '<div class="empty-state">' +
+              "<strong>Nenhum item selecionado para retirada</strong>" +
+              'Pesquise pelo SKU ou nome do produto na lista ao lado e clique em "Selecionar".' +
+            "</div>";
+          form.style.display = "none";
+          return;
+        }
+
+        const pos = getPositionByAddress(selectedPickingAddress);
+        if (!pos || pos.status !== "ocupada" || !pos.produto) {
+          selectedPickingAddress = null;
+          renderPickingSelection();
+          return;
+        }
+
+        container.innerHTML =
+          '<div class="picking-selected-box">' +
+            '<div class="detail-list" style="margin-bottom: 0;">' +
+              '<div class="detail-row"><span class="detail-key">SKU</span><span class="detail-val mono">' + escapeHtml(pos.produto.sku) + "</span></div>" +
+              '<div class="detail-row"><span class="detail-key">Produto</span><span class="detail-val">' + escapeHtml(pos.produto.nome) + "</span></div>" +
+              '<div class="detail-row"><span class="detail-key">Localização</span><span class="detail-val tabular">' + escapeHtml(pos.rua) + " · " + escapeHtml(pos.modulo) + " · " + escapeHtml(pos.nivel) + "</span></div>" +
+              '<div class="detail-row"><span class="detail-key">Estoque Disponível</span><span class="detail-val tabular" style="color: var(--red-700);">' + escapeHtml(pos.produto.quantidade) + " un.</span></div>" +
+            "</div>" +
+          "</div>";
+
+        document.getElementById("pickingAddressHidden").value = pos.address;
+        document.getElementById("pickingQtyHint").textContent =
+          "Máximo disponível nesta posição: " + pos.produto.quantidade + " unidade(s).";
+        form.style.display = "block";
+      }
+
+      function renderPickingResults() {
+        const query = document.getElementById("pickingSearchInput").value.trim().toLowerCase();
+        const container = document.getElementById("pickingResultsContainer");
+
+        const occupiedPositions = state.positions.filter(function (p) {
+          if (p.status !== "ocupada" || !p.produto) return false;
+          if (!query) return true;
+          return (
+            p.produto.sku.toLowerCase().includes(query) ||
+            p.produto.nome.toLowerCase().includes(query) ||
+            p.address.toLowerCase().includes(query)
+          );
+        });
+
+        if (!occupiedPositions.length) {
+          container.innerHTML =
+            '<div class="empty-state">' +
+              "<strong>Nenhum produto encontrado para retirada</strong>" +
+              (query ? 'Não há itens em estoque correspondentes a "' + escapeHtml(query) + '".' : "Não há produtos armazenados no momento.") +
+            "</div>";
+          return;
+        }
+
+        const rows = occupiedPositions.map(function (pos) {
+          const isSelected = selectedPickingAddress === pos.address;
+          return (
+            "<tr>" +
+              '<td class="mono">' + escapeHtml(pos.produto.sku) + "</td>" +
+              "<td>" + escapeHtml(pos.produto.nome) + "</td>" +
+              '<td class="tabular" style="white-space:nowrap;">' + escapeHtml(pos.rua) + " / " + escapeHtml(pos.modulo) + " / " + escapeHtml(pos.nivel) + "</td>" +
+              '<td class="num tabular"><strong>' + escapeHtml(pos.produto.quantidade) + "</strong></td>" +
+              '<td class="num">' +
+                '<button class="btn btn-sm ' + (isSelected ? "btn-primary" : "btn-outline") + ' picking-pick-btn" type="button" data-address="' + escapeHtml(pos.address) + '">' +
+                  (isSelected ? "Selecionado" : "Selecionar") +
+                "</button>" +
+              "</td>" +
+            "</tr>"
+          );
+        }).join("");
+
+        container.innerHTML =
+          '<div class="table-wrap">' +
+            "<table>" +
+              "<thead><tr>" +
+                "<th>SKU</th>" +
+                "<th>Produto</th>" +
+                "<th>Localização</th>" +
+                '<th class="num">Disponível</th>' +
+                '<th class="num">Ação</th>' +
+              "</tr></thead>" +
+              "<tbody>" + rows + "</tbody>" +
+            "</table>" +
+          "</div>";
+
+        container.querySelectorAll(".picking-pick-btn").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            selectPickingPosition(btn.getAttribute("data-address"));
+            renderPickingResults();
+          });
+        });
+      }
+
+      function handlePickingSubmit(event) {
+        event.preventDefault();
+        clearInlineAlert("pickingAlert");
+
+        const address = document.getElementById("pickingAddressHidden").value;
+        const qtyInput = document.getElementById("pickingQty");
+        const rawQty = qtyInput.value.trim();
+        const qtyWithdraw = Number(rawQty);
+
+        const pos = getPositionByAddress(address);
+        if (!pos || pos.status !== "ocupada" || !pos.produto) {
+          showInlineAlert("pickingAlert", "Erro: a posição selecionada não possui estoque disponível.", "error");
+          return;
+        }
+
+        if (!rawQty || !Number.isInteger(qtyWithdraw) || qtyWithdraw <= 0) {
+          showInlineAlert("pickingAlert", "Erro de validação: informe uma quantidade inteira positiva para retirar.", "error");
+          qtyInput.focus();
+          return;
+        }
+
+        if (qtyWithdraw > pos.produto.quantidade) {
+          showInlineAlert(
+            "pickingAlert",
+            "Retirada negada: quantidade solicitada (" + qtyWithdraw + ") é maior que o estoque disponível (" + pos.produto.quantidade + " un.) em " + pos.address + ".",
+            "error"
+          );
+          qtyInput.focus();
+          return;
+        }
+
+        const timestamp = nowFormatted();
+        const sku = pos.produto.sku;
+        const nome = pos.produto.nome;
+        const remaining = pos.produto.quantidade - qtyWithdraw;
+
+        state.movements.unshift({
+          dataHora: timestamp,
+          tipo: "SAIDA",
+          sku: sku,
+          nome: nome,
+          quantidade: qtyWithdraw,
+          address: pos.address
+        });
+        if (state.movements.length > 50) {
+          state.movements.length = 50;
+        }
+
+        let freedPosition = false;
+        if (remaining === 0) {
+          pos.status = "livre";
+          pos.produto = null;
+          freedPosition = true;
+          selectedPickingAddress = null;
+        } else {
+          pos.produto.quantidade = remaining;
+          pos.produto.atualizadoEm = timestamp;
+        }
+
+        saveState();
+        qtyInput.value = "";
+        renderAll();
+
+        const msg = freedPosition
+          ? "Saída confirmada (" + qtyWithdraw + " un. de " + sku + "). Estoque zerado e posição " + pos.address + " liberada."
+          : "Saída confirmada (" + qtyWithdraw + " un. de " + sku + "). Saldo restante em " + pos.address + ": " + remaining + " un.";
+
+        showInlineAlert("pickingAlert", msg, "success");
+        showToast("Saída registrada para " + sku, "success");
+      }
+
+      /* =========================================================
+       * 9. CONSULTA DE PRODUTOS (BUSCA INSTANTÂNEA)
+       * ========================================================= */
+      function renderConsultaView() {
+        const query = document.getElementById("consultaSearchInput").value.trim().toLowerCase();
+        const container = document.getElementById("consultaTableContainer");
+        const countInfo = document.getElementById("consultaCountInfo");
+
+        const results = state.positions.filter(function (p) {
+          if (p.status !== "ocupada" || !p.produto) return false;
+          if (!query) return true;
+          return (
+            p.produto.nome.toLowerCase().includes(query) ||
+            p.produto.sku.toLowerCase().includes(query)
+          );
+        });
+
+        const totalUnits = results.reduce(function (acc, p) {
+          return acc + (p.produto ? p.produto.quantidade : 0);
+        }, 0);
+
+        countInfo.textContent = results.length + " posição(ões) · " + totalUnits.toLocaleString("pt-BR") + " unidades";
+
+        if (!results.length) {
+          container.innerHTML =
+            '<div class="empty-state">' +
+              "<strong>Nenhum produto encontrado</strong>" +
+              (query
+                ? 'Não foram encontrados produtos em estoque com o nome ou SKU "' + escapeHtml(query) + '".'
+                : "Não há produtos armazenados no armazém no momento.") +
+            "</div>";
+          return;
+        }
+
+        const rows = results.map(function (pos) {
+          return (
+            "<tr>" +
+              "<td><strong>" + escapeHtml(pos.produto.nome) + "</strong></td>" +
+              '<td class="mono">' + escapeHtml(pos.produto.sku) + "</td>" +
+              '<td class="num tabular"><strong>' + escapeHtml(pos.produto.quantidade) + "</strong></td>" +
+              "<td>" + escapeHtml(pos.rua) + "</td>" +
+              '<td class="mono">' + escapeHtml(pos.modulo) + "</td>" +
+              '<td class="mono">' + escapeHtml(pos.nivel) + "</td>" +
+              '<td class="num" style="white-space:nowrap;">' +
+                '<button class="btn btn-sm btn-outline consulta-map-btn" type="button" data-address="' + escapeHtml(pos.address) + '">Ver no Mapa</button> ' +
+                '<button class="btn btn-sm btn-outline consulta-pick-btn" type="button" data-address="' + escapeHtml(pos.address) + '">Retirar</button>' +
+              "</td>" +
+            "</tr>"
+          );
+        }).join("");
+
+        container.innerHTML =
+          '<div class="table-wrap">' +
+            "<table>" +
+              "<thead><tr>" +
+                "<th>Produto</th>" +
+                "<th>SKU</th>" +
+                '<th class="num">Quantidade</th>' +
+                "<th>Rua</th>" +
+                "<th>Módulo</th>" +
+                "<th>Nível</th>" +
+                '<th class="num">Ações</th>' +
+              "</tr></thead>" +
+              "<tbody>" + rows + "</tbody>" +
+            "</table>" +
+          "</div>";
+
+        container.querySelectorAll(".consulta-map-btn").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            selectedMapAddress = btn.getAttribute("data-address");
+            document.getElementById("mapStreetFilter").value = "TODAS";
+            document.getElementById("mapStatusFilter").value = "TODOS";
+            navigateTo("mapa");
+          });
+        });
+
+        container.querySelectorAll(".consulta-pick-btn").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            const addr = btn.getAttribute("data-address");
+            navigateTo("saida");
+            selectPickingPosition(addr);
+            renderPickingResults();
+          });
+        });
+      }
+
+      /* =========================================================
+       * 10. RENDER GLOBAL & INICIALIZAÇÃO DE EVENTOS
+       * ========================================================= */
+      function renderAll() {
+        renderDashboard();
+        renderWarehouseMap();
+        renderPutawayView();
+        renderPickingSelection();
+        renderPickingResults();
+        renderConsultaView();
+      }
+
+      function initEvents() {
+        // Navegação lateral
+        document.querySelectorAll(".nav-item").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            navigateTo(btn.getAttribute("data-view"));
+          });
+        });
+
+        // Menu mobile
+        document.getElementById("menuToggleBtn").addEventListener("click", openMobileSidebar);
+        document.getElementById("sidebarCloseBtn").addEventListener("click", closeMobileSidebar);
+        document.getElementById("sidebarBackdrop").addEventListener("click", closeMobileSidebar);
+
+        // Filtros do mapa
+        document.getElementById("mapStreetFilter").addEventListener("change", renderWarehouseMap);
+        document.getElementById("mapStatusFilter").addEventListener("change", renderWarehouseMap);
+
+        // Formulário Putaway
+        document.getElementById("putawayForm").addEventListener("submit", handlePutawaySubmit);
+
+        // Formulário Picking
+        document.getElementById("pickingForm").addEventListener("submit", handlePickingSubmit);
+        document.getElementById("pickingSearchInput").addEventListener("input", renderPickingResults);
+        document.getElementById("pickingCancelBtn").addEventListener("click", function () {
+          selectedPickingAddress = null;
+          clearInlineAlert("pickingAlert");
+          renderPickingSelection();
+          renderPickingResults();
+        });
+        document.getElementById("pickingMaxBtn").addEventListener("click", function () {
+          if (!selectedPickingAddress) return;
+          const pos = getPositionByAddress(selectedPickingAddress);
+          if (pos && pos.produto) {
+            document.getElementById("pickingQty").value = String(pos.produto.quantidade);
+          }
+        });
+
+        // Busca instantânea na Consulta de Produtos
+        document.getElementById("consultaSearchInput").addEventListener("input", renderConsultaView);
+
+        // Modal Restaurar Dados de Demonstração
+        const modal = document.getElementById("restoreModal");
+        document.getElementById("restoreDemoBtn").addEventListener("click", function () {
+          modal.classList.add("open");
+        });
+        document.getElementById("cancelRestoreBtn").addEventListener("click", function () {
+          modal.classList.remove("open");
+        });
+        modal.addEventListener("click", function (e) {
+          if (e.target === modal) {
+            modal.classList.remove("open");
+          }
+        });
+        document.getElementById("confirmRestoreBtn").addEventListener("click", function () {
+          state = createInitialState();
+          selectedMapAddress = null;
+          selectedPickingAddress = null;
+          clearInlineAlert("putawayAlert");
+          clearInlineAlert("pickingAlert");
+          saveState();
+          modal.classList.remove("open");
+          renderAll();
+          showToast("Dados de demonstração restaurados com sucesso.", "success");
+        });
+      }
+
+      loadState();
+      initEvents();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
